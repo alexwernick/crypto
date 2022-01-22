@@ -8,6 +8,6 @@ namespace Crypto.Components
         void AddBlock(ulong proof, List<Transaction> transactions);
         bool IsChainValid();
         Block GetPreviousBlock();
-        bool ReplaceChain();
+        void ReplaceChain(List<Block> chain);
     }
 }

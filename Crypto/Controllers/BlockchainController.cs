@@ -45,8 +45,23 @@ namespace Crypto.Controllers
         [HttpPost(ApiRoutes.Blockchain.AddTransaction)]
         public IActionResult AddTransaction([FromBody]AddTransactionRequest request)
         {
+            // add validation
             _memPool.AddTransaction(request.Sender, request.Receiver, request.Amount);
-            return Ok(); // should return 201
+            return Accepted();
+        }
+
+        [HttpPost(ApiRoutes.Blockchain.AddNode)]
+        public IActionResult AddNode([FromBody] AddNodeRequest request)
+        {
+            // add validation
+            _nodeNetwork.AddNode(new Uri(request.NodeAddress));
+            return Accepted();
+        }
+
+        [HttpGet(ApiRoutes.Blockchain.GetNodes)]
+        public IActionResult GetNodes()
+        {
+            return Ok(_nodeNetwork.GetNodes());
         }
     }
 }

@@ -1,34 +1,23 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 
 namespace Crypto.Components
 {
     public class Blockchain : IBlockchain
     {
-        private readonly INodeNetwork _nodeNetwork;
-
-        public Blockchain(INodeNetwork nodeNetwork)
+        public Blockchain()
         {
-            _nodeNetwork = nodeNetwork ?? throw new ArgumentNullException(nameof(nodeNetwork));
             Chain = new List<Block>() { Block.CreateGenesisBlock() };
         }
 
         public List<Block> Chain { get; private set; }
 
-        public void AddBlock(ulong proof, List<Transaction> transactions)
+        public static bool ValidateChain(List<Block> chain)
         {
-            var previousHash = GetPreviousBlock().Hash();
-            var block = Block.CreateBlock(proof, previousHash, transactions);
-            Chain.Add(block);
-        }
-
-        public bool IsChainValid()
-        {
-            for (int i = 1; i < Chain.Count; ++i)
+            for (int i = 1; i < chain.Count; ++i)
             {
-                var block = Chain[i];
-                var previousBlock = Chain[i - 1];
+                var block = chain[i];
+                var previousBlock = chain[i - 1];
 
                 if (!block.IsBlockValid(previousBlock.Hash()))
                 {
@@ -39,22 +28,26 @@ namespace Crypto.Components
             return true;
         }
 
+        public void AddBlock(ulong proof, List<Transaction> transactions)
+        {
+            var previousHash = GetPreviousBlock().Hash();
+            var block = Block.CreateBlock(proof, previousHash, transactions);
+            Chain.Add(block);
+        }
+
+        public bool IsChainValid()
+        {
+            return ValidateChain(Chain);
+        }
+
         public Block GetPreviousBlock()
         {
             return Chain.Last();
         }
 
-        public bool ReplaceChain()
+        public void ReplaceChain(List<Block> chain)
         {
-            var longestChainInNetwork = _nodeNetwork.GetLongestChain();
-
-            if (longestChainInNetwork.Count > Chain.Count)
-            {
-                Chain = longestChainInNetwork;
-                return true;
-            }
-
-            return false;
+            Chain = chain;
         }
     }
 }
