@@ -55,7 +55,7 @@ namespace Crypto.Controllers
         public async Task<IActionResult> AddNode([FromBody] AddNodeRequest request)
         {
             // add validation
-            await _nodeNetwork.AddNode(new Uri(request.NodeAddress));
+            await _nodeNetwork.TryAddNode(new Uri(request.NodeAddress));
             return Accepted();
         }
 

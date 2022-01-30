@@ -1,5 +1,6 @@
 ﻿using Newtonsoft.Json;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
@@ -11,29 +12,31 @@ namespace Crypto.Components
 {
     public class NodeNetwork : INodeNetwork
     {
-        private List<Node> _nodes;
+        private ConcurrentDictionary<string, Node> _nodes;
         private HttpClient _httpClient;
         private Ping _ping;
 
         public NodeNetwork()
         {
-            _nodes = new List<Node>();
+            _nodes = new ConcurrentDictionary<string, Node>();
             _httpClient = new HttpClient();
             _ping = new Ping();
         }
 
-        public async Task AddNode(Uri uri)
+        public async Task<bool> TryAddNode(Uri uri)
         {
             // locking needed
-            if(!_nodes.Any(y => y.Address.AbsoluteUri == uri.AbsoluteUri) && await CanConnectToNode(uri))
+            if(!await CanConnectToNode(uri))
             {
-                _nodes.Add(new Node(uri));
+                return false;
             }
+
+            return _nodes.TryAdd(uri.Host, new Node(uri));
         }
 
         public List<Node> GetNodes()
         {
-            return _nodes;
+            return _nodes.Values.ToList();
         }
 
         public async Task<List<Block>> GetLongestChain()
@@ -55,7 +58,7 @@ namespace Crypto.Components
 
         public async Task SynchronizeNodes()
         {
-            foreach (var node in _nodes)
+            foreach (var node in _nodes.Values)
             {
                 List<Node>? nodesFromOtherNode = await GetNodesFromNode(node);
 
@@ -63,7 +66,7 @@ namespace Crypto.Components
                 {
                     foreach(var nodeFromOtherNode in nodesFromOtherNode)
                     {
-                        AddNode(nodeFromOtherNode.Address);
+                        await TryAddNode(nodeFromOtherNode.Address);
                     }
                 }
             }
@@ -103,7 +106,7 @@ namespace Crypto.Components
 
             if(!node.IsSeedNode)
             {
-                if(_nodes.Remove(node))
+                if(_nodes.(node))
                 {
                     // log node is removed
                 }

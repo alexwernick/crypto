@@ -6,7 +6,7 @@ namespace Crypto.Components
 {
     public interface INodeNetwork
     {
-        Task AddNode(Uri uri);
+        Task<bool> TryAddNode(Uri uri);
         List<Node> GetNodes();
         Task<List<Block>> GetLongestChain();
         Task SynchronizeNodes();
