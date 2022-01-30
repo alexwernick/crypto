@@ -12,9 +12,9 @@ namespace Crypto.Components
 {
     public class NodeNetwork : INodeNetwork
     {
-        private ConcurrentDictionary<string, Node> _nodes;
-        private HttpClient _httpClient;
-        private Ping _ping;
+        private readonly ConcurrentDictionary<string, Node> _nodes;
+        private readonly HttpClient _httpClient;
+        private readonly Ping _ping;
 
         public NodeNetwork()
         {
@@ -25,13 +25,7 @@ namespace Crypto.Components
 
         public async Task<bool> TryAddNode(Uri uri)
         {
-            // locking needed
-            if(!await CanConnectToNode(uri))
-            {
-                return false;
-            }
-
-            return _nodes.TryAdd(uri.Host, new Node(uri));
+            return await CanConnectToNode(uri) && _nodes.TryAdd(uri.Host, new Node(uri));
         }
 
         public List<Node> GetNodes()
@@ -43,7 +37,7 @@ namespace Crypto.Components
         {
             var longestChain = new List<Block>();
 
-            foreach (var node in _nodes)
+            foreach (var node in _nodes.Values)
             {
                 List<Block>? chain = await GetChainFromNode(node);
                 
@@ -72,23 +66,40 @@ namespace Crypto.Components
             }
         }
 
-        private async Task<List<Block>?> GetChainFromNode(Node node)
+        public async Task<List<Transaction>> GetMemPool()
         {
-            var response = await _httpClient.GetAsync(new Uri(node.Address, Controllers.ApiRoutes.Blockchain.Get));
-            
-            if (!response.IsSuccessStatusCode)
+            var memPool = new List<Transaction>();
+
+            foreach (var node in _nodes.Values)
             {
-                HandleNodeConnectionFailure(node, response.StatusCode);
-                return null;
+                List<Transaction>? nodeMemPool = await GetMemPoolFromNode(node);
+                if(nodeMemPool is not null)
+                {
+                    memPool.AddRange(nodeMemPool.Where(x => !memPool.Any(y => y.Id == x.Id)));
+                }
             }
 
-            string jsonResponse = await response.Content.ReadAsStringAsync();
-            return JsonConvert.DeserializeObject<List<Block>>(jsonResponse);
+            return memPool;
+        }
+
+        private async Task<List<Block>?> GetChainFromNode(Node node)
+        {
+            return await GetFromNode<List<Block>>(node, Controllers.ApiRoutes.Blockchain.Get);
         }
 
         private async Task<List<Node>?> GetNodesFromNode(Node node)
         {
-            var response = await _httpClient.GetAsync(new Uri(node.Address, Controllers.ApiRoutes.Blockchain.GetNodes));
+            return await GetFromNode<List<Node>>(node, Controllers.ApiRoutes.Blockchain.GetNodes);
+        }
+
+        private async Task<List<Transaction>?> GetMemPoolFromNode(Node node)
+        {
+            return await GetFromNode<List<Transaction>>(node, Controllers.ApiRoutes.Blockchain.GetMemPool);
+        }
+
+        private async Task<T?> GetFromNode<T>(Node node, string root) where T : class
+        {
+            var response = await _httpClient.GetAsync(new Uri(node.Address, root));
 
             if (!response.IsSuccessStatusCode)
             {
@@ -97,8 +108,9 @@ namespace Crypto.Components
             }
 
             string jsonResponse = await response.Content.ReadAsStringAsync();
-            return JsonConvert.DeserializeObject<List<Node>>(jsonResponse);
+            return JsonConvert.DeserializeObject<T>(jsonResponse);
         }
+
 
         private void HandleNodeConnectionFailure(Node node, HttpStatusCode statusCode)
         {
@@ -106,7 +118,7 @@ namespace Crypto.Components
 
             if(!node.IsSeedNode)
             {
-                if(_nodes.(node))
+                if(_nodes.TryRemove(node.Address.Host, out _))
                 {
                     // log node is removed
                 }

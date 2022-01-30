@@ -9,5 +9,6 @@ namespace Crypto.Components
         bool IsChainValid();
         Block GetPreviousBlock();
         void ReplaceChain(List<Block> chain);
+        bool IsTransactionInChain(Transaction transactions);
     }
 }

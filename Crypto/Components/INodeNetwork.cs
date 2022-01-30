@@ -10,5 +10,6 @@ namespace Crypto.Components
         List<Node> GetNodes();
         Task<List<Block>> GetLongestChain();
         Task SynchronizeNodes();
+        Task<List<Transaction>> GetMemPool();
     }
 }

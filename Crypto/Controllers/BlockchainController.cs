@@ -31,7 +31,7 @@ namespace Crypto.Controllers
         {
             var previousBlock = _blockchain.GetPreviousBlock();
             var transactions = _memPool.TakeTransactions();
-            transactions.Add(new Transaction("coinbase", "miner", 1)); // add coinbase transaction
+            transactions.Add(new Transaction("coinbase", "miner", 1, Guid.NewGuid())); // add coinbase transaction
             var proof = Block.ProofOfWork(previousBlock.Hash(), transactions);
             _blockchain.AddBlock(proof, transactions);
             return Ok(_blockchain.GetPreviousBlock());
@@ -47,7 +47,7 @@ namespace Crypto.Controllers
         public IActionResult AddTransaction([FromBody]AddTransactionRequest request)
         {
             // add validation
-            _memPool.AddTransaction(request.Sender, request.Receiver, request.Amount);
+            _memPool.TryAddTransaction(request.Sender, request.Receiver, request.Amount, Guid.NewGuid());
             return Accepted();
         }
 
@@ -63,6 +63,12 @@ namespace Crypto.Controllers
         public IActionResult GetNodes()
         {
             return Ok(_nodeNetwork.GetNodes());
+        }
+
+        [HttpGet(ApiRoutes.Blockchain.GetMemPool)]
+        public IActionResult GetMemPool()
+        {
+            return Ok(_memPool.GetTransactions());
         }
     }
 }

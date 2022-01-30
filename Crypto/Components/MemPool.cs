@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace Crypto.Components
@@ -22,9 +23,32 @@ namespace Crypto.Components
             return transactionsToTake;
         }
 
-        public void AddTransaction(string sender, string receiver, float amount)
+        public bool TryAddTransaction(string sender, string receiver, float amount, Guid id)
         {
-            _transactions.Add(new Transaction(sender, receiver, amount));
+            return TryAddTransaction(new Transaction(sender, receiver, amount, id));
+        }
+
+        public bool TryAddTransaction(Transaction transaction)
+        {
+            // locking needed here
+            if (_transactions.Any(x => x.Id == transaction.Id))
+            {
+                return false;
+            }
+
+            _transactions.Add(transaction);
+            return true;
+        }
+
+        public bool TryRemoveTransaction(Transaction transaction)
+        {
+            // locking needed here
+            return _transactions.RemoveAll(x => x.Id == transaction.Id) > 0;
+        }
+
+        public List<Transaction> GetTransactions()
+        {
+            return _transactions;
         }
     }
 }

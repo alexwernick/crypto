@@ -49,5 +49,19 @@ namespace Crypto.Components
         {
             Chain = chain;
         }
+
+        public bool IsTransactionInChain(Transaction transactions)
+        {
+            foreach(var block in Chain)
+            {
+                if(block.Transactions.Any(x => x.Id == transactions.Id))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
     }
 }

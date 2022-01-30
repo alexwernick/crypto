@@ -11,6 +11,7 @@
             public const string AddTransaction = _base + "/add-transaction";
             public const string AddNode = _base + "/add-node";
             public const string GetNodes = _base + "/get-nodes";
+            public const string GetMemPool = _base + "/get-mem-pool";
         }
     }
 }

@@ -1,10 +1,14 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 namespace Crypto.Components
 {
     public interface IMemPool
     {
         List<Transaction> TakeTransactions();
-        void AddTransaction(string sender, string receiver, float amount);
+        bool TryAddTransaction(string sender, string receiver, float amount, Guid id);
+        bool TryAddTransaction(Transaction transaction);
+        bool TryRemoveTransaction(Transaction transaction);
+        List<Transaction> GetTransactions();
     }
 }
