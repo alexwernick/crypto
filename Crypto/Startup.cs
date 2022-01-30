@@ -23,6 +23,12 @@ namespace Crypto
             services.AddSingleton<IBlockchain, Blockchain>();
             services.AddSingleton<IMemPool, MemPool>();
             services.AddSingleton<INodeNetwork, NodeNetwork>();
+
+            var nodeNetworkOptions = new NodeNetworkOptions();
+            Configuration.Bind("NodeNetwork", nodeNetworkOptions);
+            services.AddSingleton(nodeNetworkOptions);
+            services.AddHostedService<NodeNetworkSynchronizationService>();
+
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

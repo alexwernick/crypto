@@ -15,12 +15,15 @@ namespace Crypto.Components
         private readonly ConcurrentDictionary<string, Node> _nodes;
         private readonly HttpClient _httpClient;
         private readonly Ping _ping;
+        private readonly NodeNetworkOptions _options;
 
-        public NodeNetwork()
+        public NodeNetwork(NodeNetworkOptions options)
         {
+            _options = options ?? throw new ArgumentNullException(nameof(options));
             _nodes = new ConcurrentDictionary<string, Node>();
             _httpClient = new HttpClient();
             _ping = new Ping();
+            AddSeedNodes().Wait();
         }
 
         public async Task<bool> TryAddNode(Uri uri)
@@ -136,6 +139,18 @@ namespace Crypto.Components
 
             // log ping failure
             return false;
+        }
+
+        private async Task AddSeedNodes()
+        {
+            if (_options?.SeedNodes is not null)
+            {
+                foreach (var seedNode in _options.SeedNodes)
+                {
+                    var uri = new UriBuilder(seedNode).Uri;
+                    await TryAddNode(uri);
+                }
+            }
         }
     }
 }

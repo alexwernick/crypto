@@ -47,8 +47,7 @@ namespace Crypto.Components
 
         private async Task SynchronizeMemPool()
         {
-            var memPoolFromNodes = await _nodeNetwork.GetMemPool();
-            foreach(var transaction in memPoolFromNodes)
+            foreach(var transaction in await _nodeNetwork.GetMemPool())
             {
                 _memPool.TryAddTransaction(transaction);
             }
