@@ -2,6 +2,7 @@
 using Crypto.Controllers.Contracts.Blockchain;
 using Microsoft.AspNetCore.Mvc;
 using System;
+using System.Threading.Tasks;
 
 namespace Crypto.Controllers
 {
@@ -51,10 +52,10 @@ namespace Crypto.Controllers
         }
 
         [HttpPost(ApiRoutes.Blockchain.AddNode)]
-        public IActionResult AddNode([FromBody] AddNodeRequest request)
+        public async Task<IActionResult> AddNode([FromBody] AddNodeRequest request)
         {
             // add validation
-            _nodeNetwork.AddNode(new Uri(request.NodeAddress));
+            await _nodeNetwork.AddNode(new Uri(request.NodeAddress));
             return Accepted();
         }
 

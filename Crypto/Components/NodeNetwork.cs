@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Net.NetworkInformation;
 using System.Threading.Tasks;
 
 namespace Crypto.Components
@@ -12,17 +13,19 @@ namespace Crypto.Components
     {
         private List<Node> _nodes;
         private HttpClient _httpClient;
+        private Ping _ping;
 
         public NodeNetwork()
         {
             _nodes = new List<Node>();
             _httpClient = new HttpClient();
+            _ping = new Ping();
         }
 
-        public void AddNode(Uri uri)
+        public async Task AddNode(Uri uri)
         {
             // locking needed
-            if(!_nodes.Any(y => y.Address.AbsoluteUri == uri.AbsoluteUri))
+            if(!_nodes.Any(y => y.Address.AbsoluteUri == uri.AbsoluteUri) && await CanConnectToNode(uri))
             {
                 _nodes.Add(new Node(uri));
             }
@@ -105,6 +108,19 @@ namespace Crypto.Components
                     // log node is removed
                 }
             }
+        }
+
+        private async Task<bool> CanConnectToNode(Uri uri)
+        {
+            var result = await _ping.SendPingAsync(uri.Host);
+
+            if(result.Status == IPStatus.Success)
+            {
+                return true;
+            }
+
+            // log ping failure
+            return false;
         }
     }
 }
