@@ -1,6 +1,7 @@
 ﻿using Newtonsoft.Json;
 using System;
 using System.Collections.Concurrent;
+using Serilog;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
@@ -16,10 +17,12 @@ namespace Crypto.Components
         private readonly HttpClient _httpClient;
         private readonly Ping _ping;
         private readonly NodeNetworkOptions _options;
+        private readonly ILogger _logger;
 
-        public NodeNetwork(NodeNetworkOptions options)
+        public NodeNetwork(NodeNetworkOptions options, ILogger logger)
         {
             _options = options ?? throw new ArgumentNullException(nameof(options));
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _nodes = new ConcurrentDictionary<string, Node>();
             _httpClient = new HttpClient();
             _ping = new Ping();
@@ -117,13 +120,16 @@ namespace Crypto.Components
 
         private void HandleNodeConnectionFailure(Node node, HttpStatusCode statusCode)
         {
-            // log failure and http status code
+            _logger.Information(
+                "Failed to connect to node {NodeAddress} with status code {StatusCode}",
+                node.Address.AbsoluteUri,
+                statusCode.ToString());
 
-            if(!node.IsSeedNode)
+            if (!node.IsSeedNode)
             {
                 if(_nodes.TryRemove(node.Address.Host, out _))
                 {
-                    // log node is removed
+                    _logger.Information("Node {NodeAddress} has been removed", node.Address.AbsoluteUri);
                 }
             }
         }
@@ -137,7 +143,7 @@ namespace Crypto.Components
                 return true;
             }
 
-            // log ping failure
+            _logger.Information("Failed to ping node {NodeAddress} with status {IPStatus}", uri.AbsoluteUri, result.Status.ToString());
             return false;
         }
 
@@ -148,7 +154,14 @@ namespace Crypto.Components
                 foreach (var seedNode in _options.SeedNodes)
                 {
                     var uri = new UriBuilder(seedNode).Uri;
-                    await TryAddNode(uri);
+                    if(await TryAddNode(uri))
+                    {
+                        _logger.Information("Added seed node {NodeAddress}", uri.AbsoluteUri);
+                    }
+                    else
+                    {
+                        _logger.Information("Failed to add seed node {NodeAddress}", uri.AbsoluteUri);
+                    }
                 }
             }
         }

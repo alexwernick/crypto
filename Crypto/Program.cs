@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
+using Serilog;
 
 namespace Crypto
 {
@@ -22,7 +23,11 @@ namespace Crypto
                             .AddJsonFile("appsettings.json", optional: false, reloadOnChange: false)
                             .AddJsonFile($"appsettings.{hostingContext.HostingEnvironment.EnvironmentName}.json", optional: true);
                     })
-                    .UseStartup<Startup>();
+                    .UseStartup<Startup>()
+                    .UseSerilog((hostContext, loggerConfiguration) =>
+                    {
+                        loggerConfiguration.ReadFrom.Configuration(hostContext.Configuration);
+                    });
                 });
     }
 }
