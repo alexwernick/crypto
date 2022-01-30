@@ -23,6 +23,7 @@ namespace Crypto.Components
             {
                 await SynchronizeChain();
                 await _nodeNetwork.SynchronizeNodes();
+                // need to sync mempool as well
                 Thread.Sleep(PollingWaitTimeSeconds * 1000);
             }
         }

@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
 
@@ -71,7 +72,7 @@ namespace Crypto.Components
             
             if (!response.IsSuccessStatusCode)
             {
-                // log here
+                HandleNodeConnectionFailure(node, response.StatusCode);
                 return null;
             }
 
@@ -85,12 +86,25 @@ namespace Crypto.Components
 
             if (!response.IsSuccessStatusCode)
             {
-                // log here
+                HandleNodeConnectionFailure(node, response.StatusCode);
                 return null;
             }
 
             string jsonResponse = await response.Content.ReadAsStringAsync();
             return JsonConvert.DeserializeObject<List<Node>>(jsonResponse);
+        }
+
+        private void HandleNodeConnectionFailure(Node node, HttpStatusCode statusCode)
+        {
+            // log failure and http status code
+
+            if(!node.IsSeedNode)
+            {
+                if(_nodes.Remove(node))
+                {
+                    // log node is removed
+                }
+            }
         }
     }
 }
