@@ -2,6 +2,7 @@
 using Crypto.Controllers.Contracts.Blockchain;
 using Microsoft.AspNetCore.Mvc;
 using System;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace Crypto.Controllers
@@ -23,7 +24,15 @@ namespace Crypto.Controllers
         [HttpGet(ApiRoutes.Blockchain.Get)]
         public IActionResult Get()
         { 
-            return Ok(_blockchain.Chain);
+            return Ok(new GetBlockchainResponse(_blockchain.Chain.Select(x => new Contracts.Blockchain.Block(
+                x.Proof,
+                x.PreviousHash,
+                x.CreatedDate,
+                x.Transactions.Select(y => new Contracts.Blockchain.Transaction(
+                    y.Sender,
+                    y.Receiver,
+                    y.Amount,
+                    y.Id))))));
         }
 
         [HttpGet(ApiRoutes.Blockchain.MineBlock)]
@@ -31,8 +40,8 @@ namespace Crypto.Controllers
         {
             var previousBlock = _blockchain.GetPreviousBlock();
             var transactions = _memPool.TakeTransactions();
-            transactions.Add(new Transaction("coinbase", "miner", 1, Guid.NewGuid())); // add coinbase transaction
-            var proof = Block.ProofOfWork(previousBlock.Hash(), transactions);
+            transactions.Add(new Components.Transaction("coinbase", "miner", 1, Guid.NewGuid())); // add coinbase transaction
+            var proof = Components.Block.ProofOfWork(previousBlock.Hash(), transactions);
             _blockchain.AddBlock(proof, transactions);
             return Ok(_blockchain.GetPreviousBlock());
         }
@@ -62,13 +71,17 @@ namespace Crypto.Controllers
         [HttpGet(ApiRoutes.Blockchain.GetNodes)]
         public IActionResult GetNodes()
         {
-            return Ok(_nodeNetwork.GetNodes());
+            return Ok(new GetNodesResponse(_nodeNetwork.GetNodes().Select(x => x.Address.AbsoluteUri)));
         }
 
         [HttpGet(ApiRoutes.Blockchain.GetMemPool)]
         public IActionResult GetMemPool()
         {
-            return Ok(_memPool.GetTransactions());
+            return Ok(new GetMemPoolResponse(_memPool.GetTransactions().Select(x => new Contracts.Blockchain.Transaction(
+                x.Sender,
+                x.Receiver,
+                x.Amount,
+                x.Id))));
         }
     }
 }

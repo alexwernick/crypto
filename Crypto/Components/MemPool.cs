@@ -40,10 +40,10 @@ namespace Crypto.Components
             return true;
         }
 
-        public bool TryRemoveTransaction(Transaction transaction)
+        public bool TryRemoveTransactions(List<Transaction> transactions)
         {
             // locking needed here
-            return _transactions.RemoveAll(x => x.Id == transaction.Id) > 0;
+            return _transactions.RemoveAll(x => transactions.Any(y => y.Id == x.Id)) > 0;
         }
 
         public List<Transaction> GetTransactions()

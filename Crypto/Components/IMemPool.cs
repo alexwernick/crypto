@@ -8,7 +8,7 @@ namespace Crypto.Components
         List<Transaction> TakeTransactions();
         bool TryAddTransaction(string sender, string receiver, float amount, Guid id);
         bool TryAddTransaction(Transaction transaction);
-        bool TryRemoveTransaction(Transaction transaction);
+        bool TryRemoveTransactions(List<Transaction> transactions);
         List<Transaction> GetTransactions();
     }
 }

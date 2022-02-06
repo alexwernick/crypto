@@ -9,6 +9,14 @@ namespace Crypto.Components
     {
         private const string ProofCriteria = "0000";
 
+        public Block(ulong proof, string previousHash, DateTime createdDate, List<Transaction> transactions)
+        {
+            Proof = proof;
+            PreviousHash = previousHash;
+            CreatedDate = createdDate;
+            Transactions = transactions;
+        }
+
         private Block(ulong proof, string previousHash, List<Transaction> transactions)
         {
             Proof = proof;

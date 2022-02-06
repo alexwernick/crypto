@@ -21,7 +21,8 @@ namespace Crypto
                         config
                             .SetBasePath(hostingContext.HostingEnvironment.ContentRootPath)
                             .AddJsonFile("appsettings.json", optional: false, reloadOnChange: false)
-                            .AddJsonFile($"appsettings.{hostingContext.HostingEnvironment.EnvironmentName}.json", optional: true);
+                            .AddJsonFile($"appsettings.{hostingContext.HostingEnvironment.EnvironmentName}.json", optional: true)
+                            .AddEnvironmentVariables(prefix: "CRYPTO_");
                     })
                     .UseStartup<Startup>()
                     .UseSerilog((hostContext, loggerConfiguration) =>

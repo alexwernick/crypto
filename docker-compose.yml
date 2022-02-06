@@ -1,0 +1,35 @@
+version: '3.5'
+services:
+  node-1:
+    build:
+      context: .
+      dockerfile: ./Crypto/Dockerfile
+    container_name: node-1
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://*:5000
+      - CRYPTO_NodeNetwork:TryRegisterNode=false
+      - CRYPTO_NodeNetwork:NodeAddress=http://node-1:5000
+    ports:
+      - "5000:5000"
+    networks:
+      - node-network
+
+  node-2:
+    build:
+      context: .
+      dockerfile: ./Crypto/Dockerfile
+    container_name: node-2
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://*:5000
+      - CRYPTO_NodeNetwork:SeedNodes:0=http://node-1:5000
+      - CRYPTO_NodeNetwork:TryRegisterNode=true
+      - CRYPTO_NodeNetwork:NodeAddress=http://node-2:5000
+    ports:
+      - "5001:5000"
+    networks:
+      - node-network
+networks:
+  node-network:
+    name: node-network
